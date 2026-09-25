@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="TidyCSV - clean messy CSV files in your browser. Nothing is uploaded, ever. Free issue preview; $9 one-time unlock for the clean export.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="TidyCSV - clean messy CSV files in your browser">
+<meta property="og:description" content="Duplicates, whitespace, dates, emails, headers - fixed locally. Your file never leaves your device.">
+<meta name="twitter:card" content="summary">
+<title>TidyCSV - clean CSV files, privately</title>
+<style>
+:root{--ink:#141414;--muted:#5b6470;--line:#e4e8ec;--bg:#fff;--soft:#f6f8fa;--ok:#0a7d34;--warn:#b45309;--bad:#b42318}
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;margin:0;background:var(--bg);color:var(--ink);line-height:1.55}
+header{padding:28px 20px 8px;max-width:960px;margin:0 auto}
+h1{font-size:1.9rem;margin:0 0 4px}
+.tagline{color:var(--muted);margin:0}
+.privacy{display:inline-block;background:#e8f6ee;color:var(--ok);border:1px solid #bfe6cd;border-radius:999px;padding:4px 12px;font-size:.85rem;margin-top:10px}
+main{max-width:960px;margin:0 auto;padding:12px 20px 60px}
+.drop{border:2px dashed var(--line);border-radius:12px;padding:38px 20px;text-align:center;background:var(--soft);cursor:pointer;transition:border-color .15s}
+.drop.hover{border-color:var(--ok)}
+.drop p{margin:6px 0;color:var(--muted)}
+.hidden{display:none}
+.grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:18px}
+@media(min-width:820px){.grid{grid-template-columns:1fr 1fr}}
+.card{border:1px solid var(--line);border-radius:12px;padding:16px}
+.card h2{font-size:1.05rem;margin:0 0 10px}
+table.counts{border-collapse:collapse;width:100%;font-size:.92rem}
+table.counts th,table.counts td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left}
+table.counts td.n{text-align:right;font-variant-numeric:tabular-nums}
+ul.issues{margin:0;padding-left:18px;font-size:.88rem;max-height:260px;overflow:auto}
+ul.issues li{margin:3px 0}
+.badge{display:inline-block;border-radius:6px;padding:1px 7px;font-size:.78rem;background:var(--soft);border:1px solid var(--line);margin-right:6px}
+.preview{overflow:auto;max-height:300px;border:1px solid var(--line);border-radius:8px}
+.preview table{border-collapse:collapse;font-size:.85rem;min-width:100%}
+.preview th,.preview td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:5px 8px;white-space:nowrap;max-width:240px;overflow:hidden;text-overflow:ellipsis}
+.preview th{background:var(--soft);position:sticky;top:0}
+.notes{font-size:.9rem;color:var(--muted);margin:10px 0 0;padding-left:18px}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;align-items:center}
+button,.cta{font:inherit;border-radius:8px;padding:11px 20px;cursor:pointer;text-decoration:none;display:inline-block}
+button.primary,.cta{background:var(--ink);color:#fff;border:1px solid var(--ink)}
+button.secondary{background:#fff;color:var(--ink);border:1px solid var(--ink)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.pricing{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-top:16px}
+.pricing .price{font-size:1.35rem;font-weight:700;color:var(--ok)}
+.pricing p{margin:6px 0 0;font-size:.92rem;color:var(--muted)}
+.notice{border-left:4px solid var(--warn);background:#fff8ec;padding:12px 14px;border-radius:0 8px 8px 0;margin-top:12px;font-size:.92rem}
+.empty{color:var(--muted);font-size:.92rem}
+footer{max-width:960px;margin:0 auto;padding:0 20px 40px;color:var(--muted);font-size:.85rem}
+footer a{color:var(--muted)}
+code{background:var(--soft);padding:1px 5px;border-radius:4px}
+</style>
+</head>
+<body>
+<header>
+  <h1>TidyCSV</h1>
+  <p class="tagline">Clean messy CSV files in your browser: duplicates, whitespace, mixed dates, bad emails, broken headers.</p>
+  <span class="privacy">100% local - your file never leaves your device</span>
+</header>
+<main>
+  <div class="drop" id="drop" role="button" tabindex="0" aria-label="Choose a CSV file">
+    <strong>Drop a CSV here</strong> or click to choose a file
+    <p>.csv files are parsed in this tab - no upload, no server, no tracking pixels</p>
+    <input type="file" id="file" accept=".csv,text/csv" class="hidden">
+  </div>
+
+  <div class="grid hidden" id="results">
+    <section class="card">
+      <h2>Issues found</h2>
+      <table class="counts" id="counts">
+        <thead><tr><th>Rule</th><th style="text-align:right">Count</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <ul class="issues" id="issueList"></ul>
+      <p class="empty hidden" id="noIssues">No issues found - your file looks clean.</p>
+    </section>
+    <section class="card">
+      <h2>Cleaned preview</h2>
+      <div class="preview" id="preview"></div>
+      <ul class="notes" id="notes"></ul>
+    </section>
+  </div>
+
+  <div class="actions hidden" id="actions">
+    <button class="primary" id="unlockBtn">Unlock clean export - $9 one-time</button>
+    <button class="secondary" id="downloadBtn" disabled>Download cleaned CSV</button>
+    <button class="secondary hidden" id="resetBtn">Try another file</button>
+  </div>
+
+  <div class="notice hidden" id="unlockNotice">
+    <strong>Checkout is activating soon.</strong> Payments connect after our first demand
+    signal, so the download is open during launch - if TidyCSV saved you time, the
+    <strong>$9 one-time unlock</strong> is how you pay for it.
+    See <a href="LANDING.html">pricing details</a>.
+  </div>
+
+  <div class="pricing">
+    <div class="price">$9 one-time</div>
+    <p>Full clean export, once - no subscription. Free forever for previewing issues.
+    Checkout activates when payments are connected (no card required until then).</p>
+    <p>Fix files in bulk or want it done for you?
+    <a href="../csv-fix-service/index.html">CSV Fix Service</a> repairs files for you from $8.99.</p>
+  </div>
+</main>
+<footer>
+  TidyCSV is a ZeroForge product: static, dependency-free, open about how it makes money.
+  Run the same engine locally with <code>python tidycsv.py file.csv</code>.
+</footer>
+
+<script>
+"use strict";
+const RULES = ["empty_rows","duplicate_rows","whitespace","header_noise","invalid_email","mixed_dates"];
+const RULE_LABELS = {
+  empty_rows:"Empty rows", duplicate_rows:"Duplicate rows", whitespace:"Whitespace",
+  header_noise:"Header problems", invalid_email:"Suspicious emails", mixed_dates:"Mixed date formats"
+};
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/;
+const DATE_PATTERNS = [
+  ["iso", /^\d{4}-\d{2}-\d{2}$/],
+  ["slash", /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/],
+  ["dot", /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/]
+];
+
+function parseCSV(text){
+  if(text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+  const rows = [];
+  let row = [], field = "", inQuotes = false;
+  for(let i = 0; i < text.length; i++){
+    const ch = text[i];
+    if(inQuotes){
+      if(ch === '"'){
+        if(text[i+1] === '"'){ field += '"'; i++; }
+        else inQuotes = false;
+      } else field += ch;
+    } else if(ch === '"'){ inQuotes = true; }
+    else if(ch === ","){ row.push(field); field = ""; }
+    else if(ch === "\n" || ch === "\r"){
+      if(ch === "\r" && text[i+1] === "\n") i++;
+      row.push(field); field = "";
+      rows.push(row); row = [];
+    } else field += ch;
+  }
+  if(field.length || row.length){ row.push(field); rows.push(row); }
+  while(rows.length && rows[0].every(c => !String(c).trim())) rows.shift();
+  if(!rows.length) return {headers:[], rows:[]};
+  const headers = rows[0].map(c => String(c).trim());
+  const width = Math.max(headers.length, 1);
+  const data = rows.slice(1).map(r => {
+    const fixed = r.slice(0, width);
+    while(fixed.length < width) fixed.push("");
+    return fixed;
+  });
+  return {headers, rows: data};
+}
+
+function dateKind(value){
+  const v = String(value).trim();
+  for(const [name, re] of DATE_PATTERNS) if(re.test(v)) return name;
+  return null;
+}
+
+function toISO(value){
+  const v = String(value).trim();
+  for(const [name, re] of DATE_PATTERNS){
+    const m = re.exec(v);
+    if(!m) continue;
+    if(name === "iso") return v;
+    const first = parseInt(m[1], 10), second = parseInt(m[2], 10), year = m[3];
+    let day, month;
+    if(first > 12){ day = first; month = second; }
+    else if(second > 12){ month = first; day = second; }
+    else return null; // ambiguous
+    if(!(month >= 1 && month <= 12 && day >= 1 && day <= 31)) return null;
+    return year + "-" + String(month).padStart(2,"0") + "-" + String(day).padStart(2,"0");
+  }
+  return null;
+}
+
+function dateColumns(headers, rows){
+  const cols = {};
+  for(let index = 0; index < headers.length; index++){
+    const cells = rows.map(r => String(r[index] || "").trim()).filter(Boolean);
+    if(cells.length < 2) continue;
+    const kinds = cells.map(dateKind).filter(Boolean);
+    if(kinds.length / cells.length >= 0.6 && kinds.length){
+      cols[index] = kinds[0];
+    }
+  }
+  return cols;
+}
+
+function detect(headers, rows){
+  const issues = [];
+  const seenHeaders = {};
+  headers.forEach((raw, index) => {
+    const name = String(raw).trim();
+    const column = "col" + (index + 1);
+    if(!name) issues.push({rule:"header_noise", row:0, column, detail:"blank header"});
+    else if(seenHeaders[name.toLowerCase()] !== undefined)
+      issues.push({rule:"header_noise", row:0, column, detail:"duplicate header '" + name + "'"});
+    if(name && seenHeaders[name.toLowerCase()] === undefined) seenHeaders[name.toLowerCase()] = index;
+  });
+  const seenRows = {};
+  rows.forEach((row, i) => {
+    const number = i + 1;
+    if(row.every(c => !String(c).trim())){
+      issues.push({rule:"empty_rows", row:number, column:"-", detail:"entirely empty row"});
+      return;
+    }
+    const key = row.map(c => String(c).trim()).join("\u0001");
+    if(seenRows[key] !== undefined)
+      issues.push({rule:"duplicate_rows", row:number, column:"-", detail:"row duplicates line " + seenRows[key]});
+    else seenRows[key] = number;
+    row.forEach((cell, index) => {
+      const column = headers[index] ? headers[index] : "col" + (index + 1);
+      const value = String(cell);
+      if(value !== value.trim() && value.trim())
+        issues.push({rule:"whitespace", row:number, column, detail:"leading/trailing whitespace", original:value});
+      const v = value.trim();
+      if(!v) return;
+      const emailish = column.toLowerCase().includes("email") || column.toLowerCase().endsWith("mail");
+      const hasAt = v.includes("@");
+      if((emailish && !hasAt) || (hasAt && !EMAIL_RE.test(v)))
+        issues.push({rule:"invalid_email", row:number, column, detail:"does not look like a valid email", original:v});
+    });
+  });
+  const dateCols = dateColumns(headers, rows);
+  Object.keys(dateCols).forEach(key => {
+    const index = parseInt(key, 10);
+    const column = headers[index] ? headers[index] : "col" + (index + 1);
+    const values = rows.map(r => String(r[index] || "").trim()).filter(Boolean);
+    const kinds = new Set(values.map(dateKind).filter(Boolean));
+    if(kinds.size >= 2)
+      issues.push({rule:"mixed_dates", row:0, column, detail:values.length + " date cells use mixed formats (e.g. " + values.slice(0,3).join(", ") + ")"});
+  });
+  return issues;
+}
+
+function clean(headers, rows){
+  const notes = [];
+  const used = {};
+  const newHeaders = headers.map((raw, index) => {
+    let name = String(raw).trim() || ("column_" + (index + 1));
+    const base = name; let suffix = 2;
+    while(used[name.toLowerCase()]){ name = base + "_" + suffix; suffix++; }
+    if(name !== raw) notes.push("header col" + (index + 1) + ": " + (String(raw).trim() || "(blank)") + " -> " + name);
+    used[name.toLowerCase()] = true;
+    return name;
+  });
+  const dateCols = dateColumns(headers, rows);
+  const seen = new Set();
+  const out = [];
+  let droppedEmpty = 0, droppedDupes = 0, stripped = 0, converted = 0;
+  rows.forEach(row => {
+    const cells = row.map(c => String(c).trim());
+    if(cells.every(c => !c)){ droppedEmpty++; return; }
+    const key = cells.join("\u0001");
+    if(seen.has(key)){ droppedDupes++; return; }
+    seen.add(key);
+    row.forEach(c => { if(String(c) !== String(c).trim()) stripped++; });
+    const fixed = cells.map((value, index) => {
+      if(dateCols[index] !== undefined){
+        const iso = toISO(value);
+        if(iso && iso !== value){ converted++; return iso; }
+      }
+      return value;
+    });
+    out.push(fixed);
+  });
+  if(stripped) notes.push("stripped whitespace from " + stripped + " cell(s)");
+  if(droppedEmpty) notes.push("dropped " + droppedEmpty + " empty row(s)");
+  if(droppedDupes) notes.push("dropped " + droppedDupes + " duplicate row(s)");
+  if(converted) notes.push("normalized " + converted + " unambiguous date cell(s) to YYYY-MM-DD");
+  if(!notes.length) notes.push("no changes needed");
+  return {headers:newHeaders, rows:out, notes};
+}
+
+function csvEscape(value){
+  const v = String(value);
+  return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+}
+
+function toCSV(headers, rows){
+  const lines = [headers.map(csvEscape).join(",")];
+  rows.forEach(r => lines.push(r.map(csvEscape).join(",")));
+  return lines.join("\r\n") + "\r\n";
+}
+
+const $ = id => document.getElementById(id);
+let cleaned = null, fileName = "cleaned.csv";
+
+function esc(text){
+  return String(text).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+}
+
+function show(headers, rows, issues, cleanResult){
+  const tbody = $("counts").querySelector("tbody");
+  tbody.innerHTML = "";
+  const byRule = {};
+  issues.forEach(i => { byRule[i.rule] = (byRule[i.rule] || 0) + 1; });
+  RULES.forEach(rule => {
+    if(!byRule[rule]) return;
+    const tr = document.createElement("tr");
+    tr.innerHTML = "<td>" + RULE_LABELS[rule] + "</td><td class='n'>" + byRule[rule] + "</td>";
+    tbody.appendChild(tr);
+  });
+  if(!issues.length){
+    const tr = document.createElement("tr");
+    tr.innerHTML = "<td>All clear</td><td class='n'>0</td>";
+    tbody.appendChild(tr);
+  }
+  $("noIssues").classList.toggle("hidden", issues.length > 0);
+  $("issueList").innerHTML = issues.slice(0, 200).map(issue => {
+    const where = (issue.row ? "row " + issue.row + " " : "") + issue.column;
+    return "<li><span class='badge'>" + RULE_LABELS[issue.rule] + "</span>" +
+      esc(where) + ": " + esc(issue.detail) + "</li>";
+  }).join("");
+  if(issues.length > 200) $("issueList").innerHTML += "<li>... " + (issues.length - 200) + " more</li>";
+
+  const preview = $("preview");
+  let html = "<table><thead><tr>";
+  cleanResult.headers.forEach(h => { html += "<th>" + esc(h) + "</th>"; });
+  html += "</tr></thead><tbody>";
+  cleanResult.rows.slice(0, 50).forEach(r => {
+    html += "<tr>" + r.map(c => "<td>" + esc(c) + "</td>").join("") + "</tr>";
+  });
+  html += "</tbody></table>";
+  preview.innerHTML = html;
+  $("notes").innerHTML = cleanResult.notes.map(n => "<li>" + esc(n) + "</li>").join("");
+  $("results").classList.remove("hidden");
+  $("actions").classList.remove("hidden");
+  $("resetBtn").classList.remove("hidden");
+}
+
+function loadText(text, name){
+  const parsed = parseCSV(text);
+  if(!parsed.headers.length){
+    alert("No header row found - is this a CSV file?");
+    return;
+  }
+  fileName = (name || "cleaned").replace(/\.csv$/i, "") + "-clean.csv";
+  const issues = detect(parsed.headers, parsed.rows);
+  cleaned = clean(parsed.headers, parsed.rows);
+  show(parsed.headers, parsed.rows, issues, cleaned);
+  $("unlockNotice").classList.add("hidden");
+  $("downloadBtn").disabled = true;
+}
+
+$("drop").addEventListener("click", () => $("file").click());
+$("drop").addEventListener("keydown", e => { if(e.key === "Enter" || e.key === " ") $("file").click(); });
+$("file").addEventListener("change", e => {
+  const file = e.target.files && e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => loadText(String(reader.result), file.name);
+  reader.readAsText(file);
+});
+["dragenter","dragover"].forEach(evt => $("drop").addEventListener(evt, e => {
+  e.preventDefault(); $("drop").classList.add("hover");
+}));
+["dragleave","drop"].forEach(evt => $("drop").addEventListener(evt, e => {
+  e.preventDefault(); $("drop").classList.remove("hover");
+}));
+$("drop").addEventListener("drop", e => {
+  const file = e.dataTransfer.files && e.dataTransfer.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => loadText(String(reader.result), file.name);
+  reader.readAsText(file);
+});
+
+$("unlockBtn").addEventListener("click", () => {
+  $("unlockNotice").classList.remove("hidden");
+  $("downloadBtn").disabled = false;
+  $("unlockBtn").disabled = true;
+});
+
+$("downloadBtn").addEventListener("click", () => {
+  if(!cleaned) return;
+  const blob = new Blob([toCSV(cleaned.headers, cleaned.rows)], {type:"text/csv;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
+$("resetBtn").addEventListener("click", () => {
+  cleaned = null;
+  $("results").classList.add("hidden");
+  $("actions").classList.add("hidden");
+  $("unlockNotice").classList.add("hidden");
+  $("unlockBtn").disabled = false;
+  $("downloadBtn").disabled = true;
+  $("file").value = "";
+});
+</script>
+</body>
+</html>
