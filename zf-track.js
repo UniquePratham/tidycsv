@@ -9,6 +9,8 @@
  *
  * Allowlisted events (must match zeroforge.experiments.TRACKABLE):
  *   visitor, engaged, repeat, cta_click, pricing_view, checkout_start, lead, conversion
+ *   service_page_view, service_request_started, service_request_submitted,
+ *   service_request_qualified
  * Ledger-only events (purchase / revenue) are deliberately NOT recordable here:
  * verified revenue can only come from confirmed transactions.
  */
@@ -28,7 +30,11 @@
     pricing_view: 1,
     checkout_start: 1,
     lead: 1,
-    conversion: 1
+    conversion: 1,
+    service_page_view: 1,
+    service_request_started: 1,
+    service_request_submitted: 1,
+    service_request_qualified: 1
   };
 
   function read() {
