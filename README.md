@@ -59,17 +59,50 @@ whether you meant March 4 or April 3.
 ## Tests
 
 ```
-python test_tidycsv.py
+python test_tidycsv.py     # 28 tests: parsing, detection, fixes, ISO dates, CLI
+python test_site.py        # 22 tests: 9 pages, canonical/sitemap/robots,
+                           #           local-only assets, event allowlist,
+                           #           Node syntax + browser/Python core parity
 ```
 
-28 tests cover parsing (BOM, quotes, ragged rows), every detection rule, every
-clean-up fix, ISO conversion edge cases and the CLI.
+## Pages in this site
+
+| File | What it is |
+| --- | --- |
+| `index.html` | the full tool (drop a file, issue report, cleaned preview, unlock) |
+| `LANDING.html` | pricing / launch page |
+| `clean-csv-online.html` | primary free cleaner page (functional) |
+| `remove-duplicate-csv-rows.html` | dedupe page (functional) |
+| `fix-malformed-csv.html` | structure repair page (functional) |
+| `csv-column-cleanup.html` | whitespace + header cleanup page (functional) |
+| `csv-delimiter-conversion.html` | delimiter converter (functional, mode `delimiter`) |
+| `csv-encoding-problems.html` | BOM / mojibake repair (functional, mode `encoding`) |
+| `clean-csv-data.html`, `csv-formatting-tool.html`, `fix-broken-csv-file.html` | how-to guides (article + links into the tools) |
+| `sitemap.xml`, `robots.txt` | crawl configuration for the 9 pages above |
+
+Every functional page really runs: `tidycsv.js` (shared core) + `seo-tool.js`
+(widget) + `site.css`. Guides are articles only.
+
+## Measurement (no third-party analytics)
+
+Static GitHub Pages have no access logs we can reach and no server to receive
+events, and the product tests forbid remote resources. Measurement therefore is:
+
+1. **GitHub traffic API** for the repository (views/clones, fetched with `gh`).
+2. **`zf-track.js`** - a client-side session log in the visitor's browser
+   (allowlisted funnel events only, no cookies, nothing sent anywhere). The
+   visitor (or owner) exports the JSON from the badge at the bottom right and
+   imports it with:
+   ```
+   python -m zeroforge track-session --experiment exp_006 --file session.json
+   ```
+   Imported numbers are labelled *client-side session log*, never server-measured.
 
 ## Design notes
 
-- Zero dependencies: Python standard library + one static HTML file.
+- Zero dependencies: Python standard library + static HTML/JS/CSS files.
 - Zero serving cost: static hosting only, no backend, no database.
-- No tracking pixels, no CDNs, no third-party scripts.
+- No tracking pixels, no CDNs, no third-party scripts (asserted by the tests).
 - Honorable gating: the export button unlocks in the UI; there is no server to
   enforce payment yet (documented deliberately - enforcement comes with checkout).
 

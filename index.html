@@ -61,7 +61,7 @@ code{background:var(--soft);padding:1px 5px;border-radius:4px}
 <main>
   <div class="drop" id="drop" role="button" tabindex="0" aria-label="Choose a CSV file">
     <strong>Drop a CSV here</strong> or click to choose a file
-    <p>.csv files are parsed in this tab - no upload, no server, no tracking pixels</p>
+    <p>.csv files are parsed in this tab - no upload, no server, no third-party tracking</p>
     <input type="file" id="file" accept=".csv,text/csv" class="hidden">
   </div>
 
@@ -83,24 +83,39 @@ code{background:var(--soft);padding:1px 5px;border-radius:4px}
   </div>
 
   <div class="actions hidden" id="actions">
-    <button class="primary" id="unlockBtn">Unlock clean export - $9 one-time</button>
-    <button class="secondary" id="downloadBtn" disabled>Download cleaned CSV</button>
+    <button class="primary" id="unlockBtn" data-zf-event="cta_click">Unlock clean export - $9 one-time</button>
+    <button class="secondary" id="downloadBtn" disabled data-zf-event="engaged">Download cleaned CSV</button>
     <button class="secondary hidden" id="resetBtn">Try another file</button>
+  </div>
+
+  <div class="notice hidden" id="resultSummary">
+    <strong id="summaryLine">File cleaned.</strong>
+    <p>What the <strong>$9 one-time unlock</strong> adds: the full change report for every rule (the
+    preview above shows at most 200 issues), bulk cleaning through the <code>tidycsv.py</code> CLI for
+    whole folders, and a re-run whenever a new rule ships. One payment, no subscription.</p>
+    <p>Rather hand it to a person? The
+    <a href="../csv-fix-service/index.html" data-zf-event="cta_click">CSV Fix Service</a> cleans and
+    repairs files for you from <strong>$8.99</strong> - free preview first.</p>
   </div>
 
   <div class="notice hidden" id="unlockNotice">
     <strong>Checkout is activating soon.</strong> Payments connect after our first demand
     signal, so the download is open during launch - if TidyCSV saved you time, the
     <strong>$9 one-time unlock</strong> is how you pay for it.
-    See <a href="LANDING.html">pricing details</a>.
+    See <a href="LANDING.html" data-zf-event="pricing_view">pricing details</a>.
   </div>
 
   <div class="pricing">
     <div class="price">$9 one-time</div>
     <p>Full clean export, once - no subscription. Free forever for previewing issues.
-    Checkout activates when payments are connected (no card required until then).</p>
+     Checkout activates when payments are connected (no card required until then).</p>
     <p>Fix files in bulk or want it done for you?
-    <a href="../csv-fix-service/index.html">CSV Fix Service</a> repairs files for you from $8.99.</p>
+    <a href="../csv-fix-service/index.html" data-zf-event="cta_click">CSV Fix Service</a> repairs files for you from $8.99.</p>
+    <p class="hint" style="color:var(--muted);font-size:.8rem;margin-top:8px">
+      This page keeps an anonymous session log in your own browser only
+      (open the <strong>session log</strong> badge at the bottom right) - no cookies,
+      no third-party analytics, nothing sent anywhere.
+    </p>
   </div>
 </main>
 <footer>
@@ -108,184 +123,12 @@ code{background:var(--soft);padding:1px 5px;border-radius:4px}
   Run the same engine locally with <code>python tidycsv.py file.csv</code>.
 </footer>
 
+<script src="tidycsv.js"></script>
 <script>
 "use strict";
-const RULES = ["empty_rows","duplicate_rows","whitespace","header_noise","invalid_email","mixed_dates"];
-const RULE_LABELS = {
-  empty_rows:"Empty rows", duplicate_rows:"Duplicate rows", whitespace:"Whitespace",
-  header_noise:"Header problems", invalid_email:"Suspicious emails", mixed_dates:"Mixed date formats"
-};
-const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/;
-const DATE_PATTERNS = [
-  ["iso", /^\d{4}-\d{2}-\d{2}$/],
-  ["slash", /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/],
-  ["dot", /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/]
-];
-
-function parseCSV(text){
-  if(text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
-  const rows = [];
-  let row = [], field = "", inQuotes = false;
-  for(let i = 0; i < text.length; i++){
-    const ch = text[i];
-    if(inQuotes){
-      if(ch === '"'){
-        if(text[i+1] === '"'){ field += '"'; i++; }
-        else inQuotes = false;
-      } else field += ch;
-    } else if(ch === '"'){ inQuotes = true; }
-    else if(ch === ","){ row.push(field); field = ""; }
-    else if(ch === "\n" || ch === "\r"){
-      if(ch === "\r" && text[i+1] === "\n") i++;
-      row.push(field); field = "";
-      rows.push(row); row = [];
-    } else field += ch;
-  }
-  if(field.length || row.length){ row.push(field); rows.push(row); }
-  while(rows.length && rows[0].every(c => !String(c).trim())) rows.shift();
-  if(!rows.length) return {headers:[], rows:[]};
-  const headers = rows[0].map(c => String(c).trim());
-  const width = Math.max(headers.length, 1);
-  const data = rows.slice(1).map(r => {
-    const fixed = r.slice(0, width);
-    while(fixed.length < width) fixed.push("");
-    return fixed;
-  });
-  return {headers, rows: data};
-}
-
-function dateKind(value){
-  const v = String(value).trim();
-  for(const [name, re] of DATE_PATTERNS) if(re.test(v)) return name;
-  return null;
-}
-
-function toISO(value){
-  const v = String(value).trim();
-  for(const [name, re] of DATE_PATTERNS){
-    const m = re.exec(v);
-    if(!m) continue;
-    if(name === "iso") return v;
-    const first = parseInt(m[1], 10), second = parseInt(m[2], 10), year = m[3];
-    let day, month;
-    if(first > 12){ day = first; month = second; }
-    else if(second > 12){ month = first; day = second; }
-    else return null; // ambiguous
-    if(!(month >= 1 && month <= 12 && day >= 1 && day <= 31)) return null;
-    return year + "-" + String(month).padStart(2,"0") + "-" + String(day).padStart(2,"0");
-  }
-  return null;
-}
-
-function dateColumns(headers, rows){
-  const cols = {};
-  for(let index = 0; index < headers.length; index++){
-    const cells = rows.map(r => String(r[index] || "").trim()).filter(Boolean);
-    if(cells.length < 2) continue;
-    const kinds = cells.map(dateKind).filter(Boolean);
-    if(kinds.length / cells.length >= 0.6 && kinds.length){
-      cols[index] = kinds[0];
-    }
-  }
-  return cols;
-}
-
-function detect(headers, rows){
-  const issues = [];
-  const seenHeaders = {};
-  headers.forEach((raw, index) => {
-    const name = String(raw).trim();
-    const column = "col" + (index + 1);
-    if(!name) issues.push({rule:"header_noise", row:0, column, detail:"blank header"});
-    else if(seenHeaders[name.toLowerCase()] !== undefined)
-      issues.push({rule:"header_noise", row:0, column, detail:"duplicate header '" + name + "'"});
-    if(name && seenHeaders[name.toLowerCase()] === undefined) seenHeaders[name.toLowerCase()] = index;
-  });
-  const seenRows = {};
-  rows.forEach((row, i) => {
-    const number = i + 1;
-    if(row.every(c => !String(c).trim())){
-      issues.push({rule:"empty_rows", row:number, column:"-", detail:"entirely empty row"});
-      return;
-    }
-    const key = row.map(c => String(c).trim()).join("\u0001");
-    if(seenRows[key] !== undefined)
-      issues.push({rule:"duplicate_rows", row:number, column:"-", detail:"row duplicates line " + seenRows[key]});
-    else seenRows[key] = number;
-    row.forEach((cell, index) => {
-      const column = headers[index] ? headers[index] : "col" + (index + 1);
-      const value = String(cell);
-      if(value !== value.trim() && value.trim())
-        issues.push({rule:"whitespace", row:number, column, detail:"leading/trailing whitespace", original:value});
-      const v = value.trim();
-      if(!v) return;
-      const emailish = column.toLowerCase().includes("email") || column.toLowerCase().endsWith("mail");
-      const hasAt = v.includes("@");
-      if((emailish && !hasAt) || (hasAt && !EMAIL_RE.test(v)))
-        issues.push({rule:"invalid_email", row:number, column, detail:"does not look like a valid email", original:v});
-    });
-  });
-  const dateCols = dateColumns(headers, rows);
-  Object.keys(dateCols).forEach(key => {
-    const index = parseInt(key, 10);
-    const column = headers[index] ? headers[index] : "col" + (index + 1);
-    const values = rows.map(r => String(r[index] || "").trim()).filter(Boolean);
-    const kinds = new Set(values.map(dateKind).filter(Boolean));
-    if(kinds.size >= 2)
-      issues.push({rule:"mixed_dates", row:0, column, detail:values.length + " date cells use mixed formats (e.g. " + values.slice(0,3).join(", ") + ")"});
-  });
-  return issues;
-}
-
-function clean(headers, rows){
-  const notes = [];
-  const used = {};
-  const newHeaders = headers.map((raw, index) => {
-    let name = String(raw).trim() || ("column_" + (index + 1));
-    const base = name; let suffix = 2;
-    while(used[name.toLowerCase()]){ name = base + "_" + suffix; suffix++; }
-    if(name !== raw) notes.push("header col" + (index + 1) + ": " + (String(raw).trim() || "(blank)") + " -> " + name);
-    used[name.toLowerCase()] = true;
-    return name;
-  });
-  const dateCols = dateColumns(headers, rows);
-  const seen = new Set();
-  const out = [];
-  let droppedEmpty = 0, droppedDupes = 0, stripped = 0, converted = 0;
-  rows.forEach(row => {
-    const cells = row.map(c => String(c).trim());
-    if(cells.every(c => !c)){ droppedEmpty++; return; }
-    const key = cells.join("\u0001");
-    if(seen.has(key)){ droppedDupes++; return; }
-    seen.add(key);
-    row.forEach(c => { if(String(c) !== String(c).trim()) stripped++; });
-    const fixed = cells.map((value, index) => {
-      if(dateCols[index] !== undefined){
-        const iso = toISO(value);
-        if(iso && iso !== value){ converted++; return iso; }
-      }
-      return value;
-    });
-    out.push(fixed);
-  });
-  if(stripped) notes.push("stripped whitespace from " + stripped + " cell(s)");
-  if(droppedEmpty) notes.push("dropped " + droppedEmpty + " empty row(s)");
-  if(droppedDupes) notes.push("dropped " + droppedDupes + " duplicate row(s)");
-  if(converted) notes.push("normalized " + converted + " unambiguous date cell(s) to YYYY-MM-DD");
-  if(!notes.length) notes.push("no changes needed");
-  return {headers:newHeaders, rows:out, notes};
-}
-
-function csvEscape(value){
-  const v = String(value);
-  return /[",\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
-}
-
-function toCSV(headers, rows){
-  const lines = [headers.map(csvEscape).join(",")];
-  rows.forEach(r => lines.push(r.map(csvEscape).join(",")));
-  return lines.join("\r\n") + "\r\n";
-}
+// Core rules and algorithms live in tidycsv.js (shared with the how-to pages).
+const RULES = TidyCSV.RULES;
+const RULE_LABELS = TidyCSV.RULE_LABELS;
 
 const $ = id => document.getElementById(id);
 let cleaned = null, fileName = "cleaned.csv";
@@ -331,20 +174,31 @@ function show(headers, rows, issues, cleanResult){
   $("results").classList.remove("hidden");
   $("actions").classList.remove("hidden");
   $("resetBtn").classList.remove("hidden");
+
+  const ruleCount = new Set(issues.map(i => i.rule)).size;
+  $("summaryLine").textContent = issues.length
+    ? "Cleaned: " + issues.length + " issue" + (issues.length === 1 ? "" : "s") +
+      " fixed across " + ruleCount + " check" + (ruleCount === 1 ? "" : "s") +
+      ", " + cleanResult.rows.length + " row" + (cleanResult.rows.length === 1 ? "" : "s") + " kept."
+    : "Cleaned: no issues found - " + cleanResult.rows.length + " row" +
+      (cleanResult.rows.length === 1 ? "" : "s") + " kept as-is.";
+  $("resultSummary").classList.remove("hidden");
+  if(typeof window.zfTrack === "function") window.zfTrack("pricing_view");
 }
 
 function loadText(text, name){
-  const parsed = parseCSV(text);
+  const parsed = TidyCSV.parse(text);
   if(!parsed.headers.length){
     alert("No header row found - is this a CSV file?");
     return;
   }
   fileName = (name || "cleaned").replace(/\.csv$/i, "") + "-clean.csv";
-  const issues = detect(parsed.headers, parsed.rows);
-  cleaned = clean(parsed.headers, parsed.rows);
+  const issues = TidyCSV.detect(parsed.headers, parsed.rows);
+  cleaned = TidyCSV.clean(parsed.headers, parsed.rows);
   show(parsed.headers, parsed.rows, issues, cleaned);
   $("unlockNotice").classList.add("hidden");
   $("downloadBtn").disabled = true;
+  if(typeof window.zfTrack === "function") window.zfTrack("engaged");
 }
 
 $("drop").addEventListener("click", () => $("file").click());
@@ -374,11 +228,13 @@ $("unlockBtn").addEventListener("click", () => {
   $("unlockNotice").classList.remove("hidden");
   $("downloadBtn").disabled = false;
   $("unlockBtn").disabled = true;
+  if(typeof window.zfTrack === "function") window.zfTrack("checkout_start");
+  $("unlockNotice").scrollIntoView({behavior: "smooth", block: "center"});
 });
 
 $("downloadBtn").addEventListener("click", () => {
   if(!cleaned) return;
-  const blob = new Blob([toCSV(cleaned.headers, cleaned.rows)], {type:"text/csv;charset=utf-8"});
+  const blob = new Blob([TidyCSV.toCSV(cleaned.headers, cleaned.rows)], {type:"text/csv;charset=utf-8"});
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url; a.download = fileName;
@@ -393,10 +249,13 @@ $("resetBtn").addEventListener("click", () => {
   $("results").classList.add("hidden");
   $("actions").classList.add("hidden");
   $("unlockNotice").classList.add("hidden");
+  $("resultSummary").classList.add("hidden");
   $("unlockBtn").disabled = false;
   $("downloadBtn").disabled = true;
   $("file").value = "";
 });
 </script>
+<script>window.ZF_TRACKING = {experiment: "exp_006", product: "tidycsv"};</script>
+<script src="zf-track.js"></script>
 </body>
 </html>

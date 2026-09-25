@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Static product site: no query endpoints, no login, no user content.
+Sitemap: https://uniquepratham.github.io/tidycsv/sitemap.xml

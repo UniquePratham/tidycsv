@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clean CSV columns: whitespace, header names, cell formatting | TidyCSV</title>
+<meta name="description" content="Clean CSV columns before import: trim leading and trailing whitespace, repair blank or duplicate header names, and standardize column labels. Free, runs in your browser, nothing uploaded.">
+<link rel="canonical" href="https://uniquepratham.github.io/tidycsv/csv-column-cleanup.html">
+<meta name="robots" content="index,follow">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Clean CSV columns - whitespace and headers, free">
+<meta property="og:description" content="Trim whitespace, repair header names and standardize column labels in your browser.">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<header class="zc-head">
+  <a class="zc-brand" href="index.html">TidyCSV - free CSV cleaner</a>
+  <h1>Clean CSV columns before you import</h1>
+  <p class="zc-sub">Whitespace around cells and messy header names are the two column-level problems that
+  break lookups, joins and imports. Fix both below - in your browser, nothing uploaded.</p>
+</header>
+<main>
+  <section class="zc-toolbox">
+    <h2>Clean the columns</h2>
+    <div id="tool"></div>
+  </section>
+
+  <article>
+    <h2>Whitespace: the invisible import killer</h2>
+    <p><code>"Alice "</code> is not <code>"Alice"</code>. A trailing space in a name column makes a VLOOKUP
+    miss, makes a COUNTIF report two "identical" values, and makes a CRM create a second contact. Leading
+    spaces usually come from fixed-width exports; trailing spaces from pasted values. The tool trims every
+    cell and reports how many were touched, without changing anything inside the value.</p>
+
+    <h2>Header names worth normalizing</h2>
+    <ul>
+      <li><strong>Blank headers</strong> - a column with no name gets <code>column_N</code>.</li>
+      <li><strong>Duplicates</strong> - <code>email,email</code> becomes <code>email</code> and
+        <code>email_2</code>, because duplicate names silently break name-based mapping in most tools.</li>
+      <li><strong>Stray whitespace in headers</strong> - <code>" city "</code> becomes <code>city</code>.</li>
+      <li><strong>Consistent casing</strong> - pick one convention (<code>first_name</code> style works
+        almost everywhere) and apply it on export, not by hand, every time.</li>
+    </ul>
+    <p>Keep header names stable across exports: downstream formulas, saved imports and API field maps all
+    refer to them by string.</p>
+
+    <h2>Column cleanup checklist</h2>
+    <ol>
+      <li>Trim whitespace everywhere (tool above).</li>
+      <li>Repair blank/duplicate headers (tool above).</li>
+      <li>Verify the columns your destination requires actually exist and are spelled consistently.</li>
+      <li>Run the <a href="clean-csv-online.html">full cleaner</a> for dates, emails and duplicates.</li>
+      <li>Check types after import: IDs that look numeric may need to stay text (leading zeros).</li>
+    </ol>
+  </article>
+
+  <div class="zc-cta">
+    <p><strong>Free:</strong> <a href="clean-csv-online.html">full CSV cleaner</a> - all six checks, not just columns.</p>
+    <p><strong>Done for you:</strong> <a href="../csv-fix-service/index.html">CSV Fix Service</a> - column cleanup plus full repair from $8.99, free preview first.</p>
+  </div>
+
+  <section class="zc-faq">
+    <h2>Questions</h2>
+    <dl>
+      <dt>Does trimming remove spaces inside values?</dt>
+      <dd>No - only leading and trailing. <code>New York</code> stays <code>New York</code>.</dd>
+      <dt>Will renamed headers break my formulas?</dt>
+      <dd>If you reference columns by name in the same file, update the reference; blank and duplicate headers were already unusable for name-based formulas.</dd>
+      <dt>What about spaces that are not ASCII?</dt>
+      <dd>Non-breaking spaces (<code>&nbsp;</code>) often survive a trim. If a value still looks padded after cleaning, check <a href="csv-encoding-problems.html">CSV encoding problems</a>.</dd>
+    </dl>
+  </section>
+</main>
+<footer>
+  <p>TidyCSV is a ZeroForge zero-cash product experiment: static pages, no trackers, honest pricing -
+  $9 one-time unlock, or done-for-you from $8.99 with the
+  <a href="../csv-fix-service/index.html">CSV Fix Service</a>.</p>
+  <p><a href="index.html">Main tool</a> · <a href="sitemap.xml">Sitemap</a> · <a href="README.md">README</a></p>
+  <p class="zc-privacy">Measurement: no third-party tracking, no cookies - this page
+  keeps an anonymous session log inside your own browser only.</p>
+</footer>
+<script>window.ZF_TRACKING = {experiment: "exp_006", product: "tidycsv"};
+window.ZF_PAGE = {focus: ["whitespace", "header_noise"],
+  sample: "name ,email , city\n Alice ,alice@x.io, London\n bob ,bob@x.io,Paris\nname ,email ,\n",
+  messySample: "name ,email , city\n Alice ,alice@x.io, London\n bob ,bob@x.io,Paris\nname ,email ,\n"};</script>
+<script src="tidycsv.js"></script>
+<script src="seo-tool.js"></script>
+<script src="zf-track.js"></script>
+</body>
+</html>

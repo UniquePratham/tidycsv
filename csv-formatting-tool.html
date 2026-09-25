@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSV formatting tool: quoting, dates, headers, whitespace | TidyCSV</title>
+<meta name="description" content="What a CSV formatting tool actually changes: quoting rules, delimiters, line endings, date formats, whitespace and header names - plus a free formatter that runs in your browser.">
+<link rel="canonical" href="https://uniquepratham.github.io/tidycsv/csv-formatting-tool.html">
+<meta name="robots" content="index,follow">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CSV formatting tool: quoting, dates, headers, whitespace">
+<meta property="og:description" content="What CSV formatting means in practice, when it matters, and a free browser formatter.">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<header class="zc-head">
+  <a class="zc-brand" href="index.html">TidyCSV - free CSV cleaner</a>
+  <h1>CSV formatting tool: what should be standardized</h1>
+  <p class="zc-sub">"Formatting" a CSV is not cosmetics - it is making every file behave identically when
+  it is parsed. This is what a formatter changes, what actually matters, and a free one you can run now.</p>
+</header>
+<main>
+  <article>
+    <h2>Formatting dimensions of a CSV</h2>
+    <ul>
+      <li><strong>Delimiter</strong> - one separator per file, chosen for the consumer, consistent in
+        every row (<a href="csv-delimiter-conversion.html">convert delimiters</a>).</li>
+      <li><strong>Quoting</strong> - quote only what needs quoting (values containing the delimiter,
+        quotes or newlines); double the quotes inside a quoted value. Quoting everything is valid but
+        noisy; quoting nothing breaks the moment a comma appears in data.</li>
+      <li><strong>Line endings</strong> - <code>CRLF</code> or <code>LF</code>, consistently. Mixing
+        them makes diff tools and some parsers behave oddly.</li>
+      <li><strong>Dates</strong> - one format per column; ISO 8601 (<code>YYYY-MM-DD</code>) sorts
+        correctly as text and is unambiguous everywhere.</li>
+      <li><strong>Whitespace</strong> - none around cells; values carry their own spaces, not padding.</li>
+      <li><strong>Headers</strong> - unique, non-blank, stable between exports, one naming convention.</li>
+      <li><strong>Encoding</strong> - UTF-8 without surprises (<a href="csv-encoding-problems.html">fix encoding</a>).</li>
+    </ul>
+
+    <h2>When formatting matters most</h2>
+    <ol>
+      <li><strong>Imports</strong> - CRM, ads platforms and databases validate headers and types strictly.</li>
+      <li><strong>Automation</strong> - scripts keyed on column names break on a rename or a BOM.</li>
+      <li><strong>Human review</strong> - consistent dates and trimmed cells make spot checks fast.</li>
+      <li><strong>Diffing exports</strong> - without stable formatting you cannot tell a real data change
+        from an export-settings change.</li>
+    </ol>
+
+    <h2>When it does not matter</h2>
+    <p>If the file is opened once by a human, closed and never imported, formatting is optional. Do not
+    spend time normalizing throwaway extracts - spend it on the files that feed a system.</p>
+
+    <h2>TidyCSV's formatting defaults</h2>
+    <p>Comma delimiter, minimal quoting, <code>CRLF</code> line endings in the output, trimmed cells,
+    unique headers, ISO dates where unambiguous, UTF-8. The <code>$9 one-time unlock</code> on the
+    <a href="index.html" data-zf-event="pricing_view">main tool</a> produces the full formatted export
+    with a change report; the free preview already shows every change that would be applied.</p>
+  </article>
+
+  <div class="zc-cta">
+    <p><strong>Free:</strong> <a href="clean-csv-online.html">full CSV cleaner</a> - formatting plus content checks.</p>
+    <p><strong>Done for you:</strong> <a href="../csv-fix-service/index.html">CSV Fix Service</a> - formatted and repaired by a person, from $8.99.</p>
+  </div>
+
+  <section class="zc-faq">
+    <h2>Questions</h2>
+    <dl>
+      <dt>Should I quote every field?</dt>
+      <dd>No need. Quote fields that contain the delimiter, a quote or a newline - that is what every compliant parser expects.</dd>
+      <dt>Which date format should I standardize on?</dt>
+      <dd><code>YYYY-MM-DD</code>. It is unambiguous, sorts chronologically as text and is accepted by virtually every importer.</dd>
+      <dt>Is formatting the same as cleaning?</dt>
+      <dd>No. Formatting makes structure consistent; cleaning also removes duplicates, empty rows and invalid values. Run both.</dd>
+    </dl>
+  </section>
+</main>
+<footer>
+  <p>TidyCSV is a ZeroForge zero-cash product experiment: static pages, no trackers, honest pricing -
+  $9 one-time unlock, or done-for-you from $8.99 with the
+  <a href="../csv-fix-service/index.html">CSV Fix Service</a>.</p>
+  <p><a href="index.html">Main tool</a> · <a href="sitemap.xml">Sitemap</a> · <a href="README.md">README</a></p>
+  <p class="zc-privacy">Measurement: no third-party tracking, no cookies - this page
+  keeps an anonymous session log inside your own browser only.</p>
+</footer>
+<script>window.ZF_TRACKING = {experiment: "exp_006", product: "tidycsv"};</script>
+<script src="zf-track.js"></script>
+</body>
+</html>

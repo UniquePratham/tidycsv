@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clean a CSV file online, free - no upload required | TidyCSV</title>
+<meta name="description" content="Clean a CSV file online for free: remove duplicate rows, strip whitespace, fix blank headers, flag bad emails and normalize mixed date formats. The file is processed in your browser and never uploaded.">
+<link rel="canonical" href="https://uniquepratham.github.io/tidycsv/clean-csv-online.html">
+<meta name="robots" content="index,follow">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Clean a CSV file online, free - no upload required">
+<meta property="og:description" content="Duplicate rows, whitespace, blank headers, bad emails and mixed dates fixed in your browser. Nothing is uploaded.">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<header class="zc-head">
+  <a class="zc-brand" href="index.html">TidyCSV - free CSV cleaner</a>
+  <h1>Clean a CSV file online, free - without uploading it</h1>
+  <p class="zc-sub">Paste or drop a CSV, get a cleaned copy back in a few seconds. Six checks run
+  locally in this tab: nothing is sent to a server, there is no account and no third-party script.</p>
+</header>
+<main>
+  <section class="zc-toolbox">
+    <h2>Clean your CSV now</h2>
+    <div id="tool"></div>
+  </section>
+
+  <article>
+    <h2>What this cleaner fixes</h2>
+    <ul>
+      <li><strong>Duplicate rows</strong> - repeated lines from concatenated exports are dropped (first copy kept).</li>
+      <li><strong>Empty rows</strong> - blank lines that break row counts and imports are removed.</li>
+      <li><strong>Whitespace</strong> - leading and trailing spaces around names, emails and numbers are trimmed.</li>
+      <li><strong>Header problems</strong> - blank or duplicated column names are renamed to unique names.</li>
+      <li><strong>Suspicious emails</strong> - values in email columns that cannot be valid addresses are flagged (never rewritten).</li>
+      <li><strong>Mixed date formats</strong> - dates like <code>13/01/2024</code> and <code>2024-01-13</code> in the same column are normalized to <code>YYYY-MM-DD</code> when, and only when, the day/month order is unambiguous.</li>
+    </ul>
+
+    <h2>Why "no upload" matters for CSV files</h2>
+    <p>CSV exports routinely contain customer emails, order data, internal IDs or employee records.
+    Uploading that to a random free converter means trusting an unknown operator with the file. Here the
+    parsing, cleaning and download all happen inside your browser tab - the same code runs as the
+    <code>tidycsv.py</code> command-line tool, which you can verify and run offline.</p>
+    <p>There is also nothing to install and no cookie banner: this page keeps only an anonymous session
+    log inside your own browser (see the session log badge at the bottom right), which the site owner
+    can only read if you export it yourself.</p>
+
+    <h2>When you want more than the free pass</h2>
+    <p>The free result above always shows the cleaned preview and lets you download it during launch.
+    The <strong>$9 one-time unlock</strong> on the <a href="index.html" data-zf-event="pricing_view">main tool</a>
+    covers the full change report for every rule at once - no subscription. If you would rather hand the
+    file to a person, the <a href="../csv-fix-service/index.html" data-zf-event="cta_click">CSV Fix Service</a>
+    repairs it for you from $8.99 after a free preview.</p>
+  </article>
+
+  <div class="zc-cta">
+    <p><strong>Free:</strong> <a href="index.html">run the full TidyCSV tool</a> - preview every issue, no sign-up.</p>
+    <p><strong>Done for you:</strong> <a href="../csv-fix-service/index.html">CSV Fix Service</a> - send the job, get a clean import-ready file (free preview first, from $8.99).</p>
+  </div>
+
+  <section class="zc-faq">
+    <h2>Questions people actually ask</h2>
+    <dl>
+      <dt>Is my file uploaded anywhere?</dt>
+      <dd>No. Parsing, cleaning and the download happen in this browser tab (FACT: the page loads only local scripts - you can check the network tab).</dd>
+      <dt>How large a file can it handle?</dt>
+      <dd>Comfortably a few thousand rows. For 50,000+ rows use the <code>tidycsv.py</code> command-line tool so memory stays on your machine.</dd>
+      <dt>Will it guess my date order?</dt>
+      <dd>No. <code>03/04/2024</code> is ambiguous (March 4 or April 3) and is left untouched; only unambiguous values such as <code>13/01/2024</code> are converted.</dd>
+    </dl>
+  </section>
+</main>
+<footer>
+  <p>TidyCSV is a ZeroForge zero-cash product experiment: static pages, no trackers, honest pricing -
+  $9 one-time unlock, or done-for-you from $8.99 with the
+  <a href="../csv-fix-service/index.html">CSV Fix Service</a>.</p>
+  <p><a href="index.html">Main tool</a> · <a href="sitemap.xml">Sitemap</a> · <a href="README.md">README</a></p>
+  <p class="zc-privacy">Measurement: no third-party tracking, no cookies - this page
+  keeps an anonymous session log inside your own browser only.</p>
+</footer>
+<script>window.ZF_TRACKING = {experiment: "exp_006", product: "tidycsv"};
+window.ZF_PAGE = {focus: ["empty_rows", "duplicate_rows", "whitespace", "header_noise", "invalid_email", "mixed_dates"], sample: ""};</script>
+<script src="tidycsv.js"></script>
+<script src="seo-tool.js"></script>
+<script src="zf-track.js"></script>
+</body>
+</html>

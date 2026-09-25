@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fix CSV encoding problems: BOM, mojibake, broken characters | TidyCSV</title>
+<meta name="description" content="Fix CSV encoding problems: UTF-8 BOM breaking the first column name, mojibake like 'Ã©' instead of 'é', mixed line endings and unreadable characters. Free repair, runs in your browser.">
+<link rel="canonical" href="https://uniquepratham.github.io/tidycsv/csv-encoding-problems.html">
+<meta name="robots" content="index,follow">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Fix CSV encoding problems: BOM, mojibake, broken characters">
+<meta property="og:description" content="Strip the BOM, repair common UTF-8 read-as-Latin-1 mojibake, normalize line endings - in your browser.">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<header class="zc-head">
+  <a class="zc-brand" href="index.html">TidyCSV - free CSV cleaner</a>
+  <h1>Fix CSV encoding problems</h1>
+  <p class="zc-sub">If your first column is called <code>﻿name</code> or names read as
+  <code>MÃ¼ller</code>, the file is fine and the encoding is wrong. Repair what can be proven reversible
+  below - in your browser, nothing uploaded.</p>
+</header>
+<main>
+  <section class="zc-toolbox">
+    <h2>Repair encoding, then clean</h2>
+    <div id="tool"></div>
+  </section>
+
+  <article>
+    <h2>The three encoding failures you will actually hit</h2>
+    <ol>
+      <li><strong>UTF-8 BOM</strong> - a hidden byte sequence at the start of the file lands inside the
+        first header, so <code>name</code> becomes an invisible <code>﻿name</code> and every
+        name-based mapping misses it. The tool strips it and says so.</li>
+      <li><strong>Mojibake (UTF-8 read as Latin-1)</strong> - the classic <code>MÃ¼ller</code> for
+        <code>Müller</code> or <code>â€™</code> for <code>’</code>. The byte patterns are
+        well-known, so the common sequences are converted back and counted.</li>
+      <li><strong>Mixed line endings</strong> - a file edited on Windows and Unix at the same time.
+        Normalized to <code>\n</code> before parsing, then re-emitted with consistent endings.</li>
+    </ol>
+
+    <h2>What cannot be repaired by guessing</h2>
+    <p>Replacement characters (<code>�</code>) mean bytes were already lost before you got the file -
+    no conversion can recover them. The tool counts them and tells you the honest fix: re-export from the
+    source system as UTF-8. The same applies to a file that was double-encoded or saved as a legacy code
+    page without a marker; guessing the code page on customer data risks silent corruption, so this tool
+    refuses to do it.</p>
+
+    <h2>Set the encoding right at the source</h2>
+    <ul>
+      <li>Export as <strong>UTF-8</strong> whenever the system offers it; UTF-8 with BOM is acceptable
+        (the BOM is stripped here), plain UTF-8 is cleaner.</li>
+      <li>When saving from a spreadsheet, choose "CSV UTF-8 (comma separated)", not "CSV".</li>
+      <li>For programmatic exports, write <code>encoding="utf-8-sig"</code> only if a consumer requires
+        the BOM (Excel), otherwise <code>utf-8</code>.</li>
+    </ul>
+  </article>
+
+  <div class="zc-cta">
+    <p><strong>Free:</strong> <a href="clean-csv-online.html">full CSV cleaner</a> once the characters read correctly.</p>
+    <p><strong>Done for you:</strong> <a href="../csv-fix-service/index.html">CSV Fix Service</a> - encoding plus content repaired for you, from $8.99.</p>
+  </div>
+
+  <section class="zc-faq">
+    <h2>Questions</h2>
+    <dl>
+      <dt>Do I need to convert the whole file?</dt>
+      <dd>The repair runs on the text you paste, then the cleaned CSV downloads as UTF-8.</dd>
+      <dt>Why does Excel show <code>Ã©</code> but my text editor shows <code>é</code>?</dt>
+      <dd>Because Excel read a UTF-8 file using the system code page (or the reverse). Re-save from Excel as "CSV UTF-8" to stop the cycle.</dd>
+      <dt>Are there characters you will not touch?</dt>
+      <dd>Anything already lost (<code>�</code>) and any sequence that does not match a known pattern - it is reported, never rewritten by guess.</dd>
+    </dl>
+  </section>
+</main>
+<footer>
+  <p>TidyCSV is a ZeroForge zero-cash product experiment: static pages, no trackers, honest pricing -
+  $9 one-time unlock, or done-for-you from $8.99 with the
+  <a href="../csv-fix-service/index.html">CSV Fix Service</a>.</p>
+  <p><a href="index.html">Main tool</a> · <a href="sitemap.xml">Sitemap</a> · <a href="README.md">README</a></p>
+  <p class="zc-privacy">Measurement: no third-party tracking, no cookies - this page
+  keeps an anonymous session log inside your own browser only.</p>
+</footer>
+<script>window.ZF_TRACKING = {experiment: "exp_006", product: "tidycsv"};
+window.ZF_PAGE = {mode: "encoding", focus: [],
+  sample: "﻿name,city,note\nMÃ¼ller,Berlin,Itâ€™s fine\r\nJosÃ©,Madrid,clean\n",
+  messySample: "﻿name,city,note\nMÃ¼ller,Berlin,Itâ€™s fine\r\nJosÃ©,Madrid,clean\n"};</script>
+<script src="tidycsv.js"></script>
+<script src="seo-tool.js"></script>
+<script src="zf-track.js"></script>
+</body>
+</html>

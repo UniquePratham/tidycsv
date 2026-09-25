@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Remove duplicate rows from a CSV file (free, in your browser) | TidyCSV</title>
+<meta name="description" content="Remove duplicate rows from a CSV file for free. Exact-match dedupe that trims whitespace first, keeps the first copy and drops empty rows - processed in your browser, nothing uploaded.">
+<link rel="canonical" href="https://uniquepratham.github.io/tidycsv/remove-duplicate-csv-rows.html">
+<meta name="robots" content="index,follow">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Remove duplicate rows from a CSV file, free">
+<meta property="og:description" content="Exact-match dedupe that trims whitespace first. Runs in your browser, nothing uploaded.">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<header class="zc-head">
+  <a class="zc-brand" href="index.html">TidyCSV - free CSV cleaner</a>
+  <h1>Remove duplicate rows from a CSV file</h1>
+  <p class="zc-sub">Dedupe that trims whitespace before comparing, keeps the first copy of each row and
+  drops empty lines. Free, in your browser, nothing uploaded.</p>
+</header>
+<main>
+  <section class="zc-toolbox">
+    <h2>De-duplicate your CSV</h2>
+    <div id="tool"></div>
+  </section>
+
+  <article>
+    <h2>Why CSV files end up with duplicate rows</h2>
+    <ul>
+      <li><strong>Re-run exports</strong> - a report that appends to the same file instead of replacing it.</li>
+      <li><strong>Merged files</strong> - someone concatenated last month's export with this month's.</li>
+      <li><strong>Copy-paste rounds</strong> - rows pasted twice while cleaning in a spreadsheet.</li>
+      <li><strong>Invisible whitespace</strong> - <code>Alice</code> and <code>Alice&nbsp;</code> look identical but compare as different rows, so naive dedupe misses them.</li>
+    </ul>
+
+    <h2>How this dedupe decides</h2>
+    <p>Every cell is trimmed first, then the whole row is compared as a key. The first occurrence is
+    kept; later matches are dropped and counted. Completely empty rows are removed as well, because they
+    break row counts and most importers. Rows that differ in even one cell are always kept - this is exact
+    matching, not fuzzy matching, so nothing is merged by guesswork.</p>
+    <pre>name,city
+Alice,London
+Bob,Paris
+Alice,London     &lt;- dropped (exact duplicate after trim)
+Bob ,Paris       &lt;- dropped (trailing space made it look different)</pre>
+
+    <h2>The spreadsheet way (for completeness)</h2>
+    <p>In Excel: select the range, Data &gt; Remove Duplicates. In Google Sheets: Data &gt; Data cleanup
+    &gt; Remove duplicates. Both compare raw cell values, so run a trim on the columns first or you will
+    miss whitespace duplicates. The tool above trims and dedupes in one pass, and shows you exactly how
+    many rows each rule touched.</p>
+
+    <h2>After dedupe, check the rest</h2>
+    <p>Duplicates are usually a symptom of a messy pipeline. Run the
+    <a href="clean-csv-online.html">full cleaner</a> next to also catch empty rows, whitespace, blank
+    headers, suspicious emails and mixed date formats before you import the file anywhere.</p>
+  </article>
+
+  <div class="zc-cta">
+    <p><strong>Free:</strong> <a href="clean-csv-online.html">full CSV cleaner</a> - all six checks in one pass.</p>
+    <p><strong>Done for you:</strong> <a href="../csv-fix-service/index.html">CSV Fix Service</a> - dedupe and full repair from $8.99, free preview first.</p>
+  </div>
+
+  <section class="zc-faq">
+    <h2>Questions</h2>
+    <dl>
+      <dt>Does it keep the first or the last copy?</dt>
+      <dd>The first occurrence, in file order, so original ordering of unique rows is preserved.</dd>
+      <dt>Is dedupe case-sensitive?</dt>
+      <dd>Yes - <code>alice@x.io</code> and <code>Alice@x.io</code> are different rows here. Nothing is lowercased without you asking.</dd>
+      <dt>Can it merge rows that are similar but not identical?</dt>
+      <dd>No, on purpose. Fuzzy merging can delete real data; you get an exact-match tool and a visible count of what was dropped.</dd>
+    </dl>
+  </section>
+</main>
+<footer>
+  <p>TidyCSV is a ZeroForge zero-cash product experiment: static pages, no trackers, honest pricing -
+  $9 one-time unlock, or done-for-you from $8.99 with the
+  <a href="../csv-fix-service/index.html">CSV Fix Service</a>.</p>
+  <p><a href="index.html">Main tool</a> · <a href="sitemap.xml">Sitemap</a> · <a href="README.md">README</a></p>
+  <p class="zc-privacy">Measurement: no third-party tracking, no cookies - this page
+  keeps an anonymous session log inside your own browser only.</p>
+</footer>
+<script>window.ZF_TRACKING = {experiment: "exp_006", product: "tidycsv"};
+window.ZF_PAGE = {focus: ["duplicate_rows", "empty_rows"],
+  sample: "name,city\nAlice,London\nBob,Paris\nAlice,London\n\nBob ,Paris\n",
+  messySample: "name,city\nAlice,London\nBob,Paris\nAlice,London\n\nBob ,Paris\n"};</script>
+<script src="tidycsv.js"></script>
+<script src="seo-tool.js"></script>
+<script src="zf-track.js"></script>
+</body>
+</html>

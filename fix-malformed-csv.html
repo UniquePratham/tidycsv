@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fix a malformed CSV file (ragged rows, blank headers, broken quotes) | TidyCSV</title>
+<meta name="description" content="Fix a malformed CSV file: ragged rows with missing cells, blank or duplicate headers, empty lines and unescaped quotes. Paste the file, get a structurally valid CSV back - processed in your browser.">
+<link rel="canonical" href="https://uniquepratham.github.io/tidycsv/fix-malformed-csv.html">
+<meta name="robots" content="index,follow">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Fix a malformed CSV file - free browser repair">
+<meta property="og:description" content="Ragged rows padded, headers repaired, empty lines removed. Runs in your browser, nothing uploaded.">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<header class="zc-head">
+  <a class="zc-brand" href="index.html">TidyCSV - free CSV cleaner</a>
+  <h1>Fix a malformed CSV file</h1>
+  <p class="zc-sub">Ragged rows, blank headers, empty lines and stray quotes are the usual reasons an
+  import says "wrong number of fields". Repair the structure below - in your browser, nothing uploaded.</p>
+</header>
+<main>
+  <section class="zc-toolbox">
+    <h2>Repair the structure</h2>
+    <div id="tool"></div>
+  </section>
+
+  <article>
+    <h2>What "malformed" normally means</h2>
+    <ul>
+      <li><strong>Ragged rows</strong> - some lines have fewer cells than the header. This tool pads the
+        short rows with empty cells and truncates over-long ones to the header width, then tells you it did.</li>
+      <li><strong>Blank or duplicate headers</strong> - a header like <code>name,name,</code> breaks
+        importers that expect unique column names. They are renamed to <code>name</code>, <code>name_2</code>,
+        <code>column_3</code> and every rename is listed.</li>
+      <li><strong>Empty lines</strong> - a blank line in the middle of a file becomes a phantom row in
+        most tools; those rows are dropped and counted.</li>
+      <li><strong>Unescaped quotes</strong> - a cell containing <code>"</code> must be written as
+        <code>""</code> inside a quoted field. If a file was edited by hand and quotes are unbalanced,
+        the parser will run the rest of the file together; the reliable fix is to re-export from the
+        source system, or replace smart quotes (<code>“ ”</code>) with straight ones first.</li>
+    </ul>
+
+    <h2>Wrong delimiter is the other classic cause</h2>
+    <p>A semicolon-separated file opened as comma-separated shows one giant column - and every row then
+    looks "malformed". If your preview shows a single column, the delimiter is wrong: use the
+    <a href="csv-delimiter-conversion.html">delimiter converter</a> to read and re-emit the file with the
+    separator your importer expects.</p>
+
+    <h2>Repair order that actually works</h2>
+    <ol>
+      <li>Confirm the <a href="csv-delimiter-conversion.html">delimiter</a>.</li>
+      <li>Fix encoding if characters look wrong (<a href="csv-encoding-problems.html">encoding repair</a>).</li>
+      <li>Repair structure with the tool above (headers, ragged rows, empty lines).</li>
+      <li>Clean contents with the <a href="clean-csv-online.html">full cleaner</a>.</li>
+      <li>Import into a copy of the destination, never the live dataset.</li>
+    </ol>
+  </article>
+
+  <div class="zc-cta">
+    <p><strong>Free:</strong> <a href="clean-csv-online.html">full CSV cleaner</a> after the structure is fixed.</p>
+    <p><strong>Done for you:</strong> <a href="../csv-fix-service/index.html">CSV Fix Service</a> - we repair the file and send back an import-ready CSV, from $8.99.</p>
+  </div>
+
+  <section class="zc-faq">
+    <h2>Questions</h2>
+    <dl>
+      <dt>Does repairing change my data values?</dt>
+      <dd>Structure only: cells are padded or trimmed to the header width, headers are renamed, empty rows dropped. Values are never invented or reordered.</dd>
+      <dt>The preview shows one column - is that a malformed file?</dt>
+      <dd>Almost always a delimiter mismatch, not damage. Use the <a href="csv-delimiter-conversion.html">delimiter converter</a>.</dd>
+      <dt>The file has unreadable characters instead of the ones above.</dt>
+      <dd>That is encoding, not structure - see <a href="csv-encoding-problems.html">CSV encoding problems</a>.</dd>
+    </dl>
+  </section>
+</main>
+<footer>
+  <p>TidyCSV is a ZeroForge zero-cash product experiment: static pages, no trackers, honest pricing -
+  $9 one-time unlock, or done-for-you from $8.99 with the
+  <a href="../csv-fix-service/index.html">CSV Fix Service</a>.</p>
+  <p><a href="index.html">Main tool</a> · <a href="sitemap.xml">Sitemap</a> · <a href="README.md">README</a></p>
+  <p class="zc-privacy">Measurement: no third-party tracking, no cookies - this page
+  keeps an anonymous session log inside your own browser only.</p>
+</footer>
+<script>window.ZF_TRACKING = {experiment: "exp_006", product: "tidycsv"};
+window.ZF_PAGE = {focus: ["header_noise", "empty_rows"],
+  sample: "name,email,age\nAlice,alice@x.io,31\n\nbob@x.io,29\nname,name,age\n",
+  messySample: "name,email,age\nAlice,alice@x.io,31\n\nbob@x.io,29\nname,name,age\n"};</script>
+<script src="tidycsv.js"></script>
+<script src="seo-tool.js"></script>
+<script src="zf-track.js"></script>
+</body>
+</html>

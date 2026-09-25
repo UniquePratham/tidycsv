@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fix a broken CSV file: symptoms, causes and the right fix | TidyCSV</title>
+<meta name="description" content="Your CSV will not import, opens as one column, shows broken characters or has missing rows: match the symptom to the cause and the fix - with a free repair tool for each case.">
+<link rel="canonical" href="https://uniquepratham.github.io/tidycsv/fix-broken-csv-file.html">
+<meta name="robots" content="index,follow">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Fix a broken CSV file: symptoms, causes, fixes">
+<meta property="og:description" content="Match the symptom (won't import, one column, broken characters, missing rows) to the fix.">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<header class="zc-head">
+  <a class="zc-brand" href="index.html">TidyCSV - free CSV cleaner</a>
+  <h1>Fix a broken CSV file: start from the symptom</h1>
+  <p class="zc-sub">"Broken" is not a diagnosis. Find what you are actually seeing, match it below, and
+  use the free repair for that case - no upload, no account.</p>
+</header>
+<main>
+  <article>
+    <h2>Symptom → cause → fix</h2>
+    <table class="pricing" style="border-collapse:collapse;width:100%;font-size:.93rem">
+      <thead><tr><th style="border:1px solid #e4e8ec;padding:8px;background:#f6f8fa;text-align:left">What you see</th>
+      <th style="border:1px solid #e4e8ec;padding:8px;background:#f6f8fa;text-align:left">Likely cause</th>
+      <th style="border:1px solid #e4e8ec;padding:8px;background:#f6f8fa;text-align:left">Fix</th></tr></thead>
+      <tbody>
+      <tr><td style="border:1px solid #e4e8ec;padding:8px">Opens as a single column</td>
+          <td style="border:1px solid #e4e8ec;padding:8px">Wrong delimiter (semicolon file read as comma)</td>
+          <td style="border:1px solid #e4e8ec;padding:8px"><a href="csv-delimiter-conversion.html">Delimiter converter</a></td></tr>
+      <tr><td style="border:1px solid #e4e8ec;padding:8px">Column names include garbage (<code>﻿id</code>)</td>
+          <td style="border:1px solid #e4e8ec;padding:8px">UTF-8 BOM in the first header</td>
+          <td style="border:1px solid #e4e8ec;padding:8px"><a href="csv-encoding-problems.html">Encoding repair</a></td></tr>
+      <tr><td style="border:1px solid #e4e8ec;padding:8px">Names read <code>MÃ¼ller</code></td>
+          <td style="border:1px solid #e4e8ec;padding:8px">UTF-8 decoded with the wrong code page</td>
+          <td style="border:1px solid #e4e8ec;padding:8px"><a href="csv-encoding-problems.html">Encoding repair</a></td></tr>
+      <tr><td style="border:1px solid #e4e8ec;padding:8px">Import error: "wrong number of fields"</td>
+          <td style="border:1px solid #e4e8ec;padding:8px">Ragged rows, blank/duplicate headers, stray empty lines</td>
+          <td style="border:1px solid #e4e8ec;padding:8px"><a href="fix-malformed-csv.html">Structure repair</a></td></tr>
+      <tr><td style="border:1px solid #e4e8ec;padding:8px">Rows shifted or merged into one line</td>
+          <td style="border:1px solid #e4e8ec;padding:8px">Unbalanced quotes (often from hand editing)</td>
+          <td style="border:1px solid #e4e8ec;padding:8px">Re-export from the source, or straighten smart quotes first</td></tr>
+      <tr><td style="border:1px solid #e4e8ec;padding:8px">Counts higher than the source system</td>
+          <td style="border:1px solid #e4e8ec;padding:8px">Duplicate rows + empty rows</td>
+          <td style="border:1px solid #e4e8ec;padding:8px"><a href="remove-duplicate-csv-rows.html">Deduplicate</a></td></tr>
+      <tr><td style="border:1px solid #e4e8ec;padding:8px">Lookups/imports miss matching rows</td>
+          <td style="border:1px solid #e4e8ec;padding:8px">Hidden whitespace, inconsistent dates or headers</td>
+          <td style="border:1px solid #e4e8ec;padding:8px"><a href="csv-column-cleanup.html">Column cleanup</a></td></tr>
+      <tr><td style="border:1px solid #e4e8ec;padding:8px">Characters already showing <code>�</code></td>
+          <td style="border:1px solid #e4e8ec;padding:8px">Bytes lost before the file reached you</td>
+          <td style="border:1px solid #e4e8ec;padding:8px">Re-export from the source as UTF-8 - not recoverable by editing</td></tr>
+      </tbody>
+    </table>
+
+    <h2>The order that fixes most files</h2>
+    <ol>
+      <li>Encoding (characters must read correctly before anything else).</li>
+      <li>Delimiter (the preview must show columns, not one blob).</li>
+      <li>Structure (headers and row widths).</li>
+      <li>Content (whitespace, dates, emails, duplicates) via the
+        <a href="clean-csv-online.html">full cleaner</a>.</li>
+      <li>Validate with a staging import: row count plus a handful of known-good records.</li>
+    </ol>
+
+    <h2>When you should not fix it yourself</h2>
+    <p>Large files, files that arrive broken every week, or a one-off import that has to land today:
+    that is what the <a href="../csv-fix-service/index.html">CSV Fix Service</a> is for - free preview
+    first, then a cleaned import-ready file with a list of every change, from $8.99. For repeated problems,
+    fix the export at the source; a repair you run weekly is a pipeline bug.</p>
+  </article>
+
+  <div class="zc-cta">
+    <p><strong>Free:</strong> <a href="clean-csv-online.html">full CSV cleaner</a> - one pass over structure, formatting and duplicates.</p>
+    <p><strong>Done for you:</strong> <a href="../csv-fix-service/index.html">CSV Fix Service</a> - we diagnose and repair it, from $8.99.</p>
+  </div>
+
+  <section class="zc-faq">
+    <h2>Questions</h2>
+    <dl>
+      <dt>Which fix do I try first?</dt>
+      <dd>Encoding, then delimiter, then structure. Those three explain most "broken file" reports.</dd>
+      <dt>Is my file permanently damaged?</dt>
+      <dd>Almost never. With the exception of lost bytes (<code>�</code>), the problems above are formatting issues that are fully reversible.</dd>
+      <dt>Can I run this on a file with customer data?</dt>
+      <dd>Yes - everything runs in your browser tab; no upload, no server, no third-party scripts on this page.</dd>
+    </dl>
+  </section>
+</main>
+<footer>
+  <p>TidyCSV is a ZeroForge zero-cash product experiment: static pages, no trackers, honest pricing -
+  $9 one-time unlock, or done-for-you from $8.99 with the
+  <a href="../csv-fix-service/index.html">CSV Fix Service</a>.</p>
+  <p><a href="index.html">Main tool</a> · <a href="sitemap.xml">Sitemap</a> · <a href="README.md">README</a></p>
+  <p class="zc-privacy">Measurement: no third-party tracking, no cookies - this page
+  keeps an anonymous session log inside your own browser only.</p>
+</footer>
+<script>window.ZF_TRACKING = {experiment: "exp_006", product: "tidycsv"};</script>
+<script src="zf-track.js"></script>
+</body>
+</html>

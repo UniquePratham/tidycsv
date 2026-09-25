@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Convert CSV delimiter: comma, semicolon, tab or pipe | TidyCSV</title>
+<meta name="description" content="Convert a CSV delimiter between comma, semicolon, tab and pipe - for example a semicolon export that Excel opens as one column. Free, runs in your browser, nothing uploaded.">
+<link rel="canonical" href="https://uniquepratham.github.io/tidycsv/csv-delimiter-conversion.html">
+<meta name="robots" content="index,follow">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Convert CSV delimiter: comma, semicolon, tab, pipe">
+<meta property="og:description" content="Read any common separator and download the file with the one your importer expects. Free, in your browser.">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<header class="zc-head">
+  <a class="zc-brand" href="index.html">TidyCSV - free CSV cleaner</a>
+  <h1>Convert a CSV delimiter: comma, semicolon, tab or pipe</h1>
+  <p class="zc-sub">A semicolon export opened as comma-separated shows one giant column - and every row
+  then looks broken. Read the file with the right separator and download it with the one your importer
+  wants.</p>
+</header>
+<main>
+  <section class="zc-toolbox">
+    <h2>Read and re-emit with a different delimiter</h2>
+    <div id="tool"></div>
+  </section>
+
+  <article>
+    <h2>Why the delimiter keeps going wrong</h2>
+    <ul>
+      <li><strong>Regional settings</strong> - Excel in many locales uses <code>;</code> as the list
+        separator, so "CSV" files are actually semicolon-separated.</li>
+      <li><strong>Cells contain commas</strong> - names and addresses with commas push exporters to
+        semicolons or pipes.</li>
+      <li><strong>Tab-separated exports</strong> - many systems export <code>.tsv</code> with a
+        <code>.csv</code> extension.</li>
+      <li><strong>Human-edited files</strong> - someone changed separators by hand and missed some rows.</li>
+    </ul>
+    <p>The tool auto-detects the delimiter by counting separators outside quotes, lets you override it,
+    and writes the download with the delimiter you selected. Quoting follows the CSV rules: values
+    containing the separator, quotes or newlines are wrapped and internal quotes doubled.</p>
+
+    <h2>Choosing a target delimiter</h2>
+    <ul>
+      <li><strong>Comma</strong> - default for CSV everywhere; most APIs and importers expect it.</li>
+      <li><strong>Semicolon</strong> - Excel in comma-decimal locales when opening directly.</li>
+      <li><strong>Tab</strong> - paste into spreadsheets without the import wizard.</li>
+      <li><strong>Pipe</strong> - common in data pipelines where commas appear inside values.</li>
+    </ul>
+
+    <h2>After converting</h2>
+    <p>Conversion only changes the separator. Run the <a href="clean-csv-online.html">full cleaner</a>
+    afterwards if the file also has duplicate rows, whitespace, mixed dates or suspicious emails - a
+    delimiter fix will not remove those.</p>
+  </article>
+
+  <div class="zc-cta">
+    <p><strong>Free:</strong> <a href="clean-csv-online.html">full CSV cleaner</a> for content problems.</p>
+    <p><strong>Done for you:</strong> <a href="../csv-fix-service/index.html">CSV Fix Service</a> - delimiter, encoding and content fixed for you, from $8.99.</p>
+  </div>
+
+  <section class="zc-faq">
+    <h2>Questions</h2>
+    <dl>
+      <dt>How is the delimiter detected?</dt>
+      <dd>By counting <code>,</code> <code>;</code> tab and <code>|</code> outside quoted fields in the first part of the file and taking the most frequent one. You can override it with the selector.</dd>
+      <dt>Will my commas inside values survive?</dt>
+      <dd>Yes - quoted fields stay quoted, so a value like <code>"New York, NY"</code> is written correctly for any target delimiter.</dd>
+      <dt>The preview still shows one column.</dt>
+      <dd>Pick the delimiter manually, then run it again; a file with an unusual separator needs the override.</dd>
+    </dl>
+  </section>
+</main>
+<footer>
+  <p>TidyCSV is a ZeroForge zero-cash product experiment: static pages, no trackers, honest pricing -
+  $9 one-time unlock, or done-for-you from $8.99 with the
+  <a href="../csv-fix-service/index.html">CSV Fix Service</a>.</p>
+  <p><a href="index.html">Main tool</a> · <a href="sitemap.xml">Sitemap</a> · <a href="README.md">README</a></p>
+  <p class="zc-privacy">Measurement: no third-party tracking, no cookies - this page
+  keeps an anonymous session log inside your own browser only.</p>
+</footer>
+<script>window.ZF_TRACKING = {experiment: "exp_006", product: "tidycsv"};
+window.ZF_PAGE = {mode: "delimiter", focus: [],
+  sample: "name;city;note\nAlice;London;New York, NY\nBob;Paris;50% \"pure\"\n",
+  messySample: "name;city;note\nAlice;London;New York, NY\nBob;Paris;50% \"pure\"\n"};</script>
+<script src="tidycsv.js"></script>
+<script src="seo-tool.js"></script>
+<script src="zf-track.js"></script>
+</body>
+</html>
