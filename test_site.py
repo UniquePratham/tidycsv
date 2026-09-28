@@ -88,7 +88,7 @@ class PageStructureTests(unittest.TestCase):
             self.assertIn('src="zf-track.js"', html, name)
             self.assertIn("no third-party", html.lower(), name)
             self.assertIn("window.ZF_TRACKING", html, name)
-            self.assertIn("exp_006", html, name)
+            self.assertIn("exp_008", html, name)
             self.assertIn("tidycsv", html, name)
 
     def test_footer_honest_pricing_and_service_link(self):

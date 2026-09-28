@@ -83,34 +83,38 @@ code{background:var(--soft);padding:1px 5px;border-radius:4px}
   </div>
 
   <div class="actions hidden" id="actions">
-    <button class="primary" id="unlockBtn" data-zf-event="cta_click">Unlock clean export - $9 one-time</button>
+    <button class="primary" id="unlockBtn" data-zf-event="cta_click">Unlock clean export - $9 / &#8377;749</button>
     <button class="secondary" id="downloadBtn" disabled data-zf-event="engaged">Download cleaned CSV</button>
     <button class="secondary hidden" id="resetBtn">Try another file</button>
+    <span class="privacy hidden" id="entitlementBadge">Paid unlock active</span>
   </div>
 
   <div class="notice hidden" id="resultSummary">
     <strong id="summaryLine">File cleaned.</strong>
-    <p>What the <strong>$9 one-time unlock</strong> adds: the full change report for every rule (the
-    preview above shows at most 200 issues), bulk cleaning through the <code>tidycsv.py</code> CLI for
-    whole folders, and a re-run whenever a new rule ships. One payment, no subscription.</p>
+    <p>What the <strong>$9 / &#8377;749 one-time unlock</strong> adds: the full change report for every rule (the
+    free preview above shows at most 50 issues), downloading the cleaned CSV, bulk cleaning through the
+    <code>tidycsv.py</code> CLI for whole folders, and a re-run whenever a new rule ships. One payment, no subscription.</p>
     <p>Rather hand it to a person? The
     <a href="../csv-fix-service/index.html" data-zf-event="cta_click">CSV Fix Service</a> cleans and
     repairs files for you from <strong>$8.99</strong> - free preview first.</p>
   </div>
 
   <div class="notice hidden" id="unlockNotice">
-    <strong>Checkout is activating soon.</strong> Payments connect after our first demand
-    signal, so the download is open during launch - if TidyCSV saved you time, the
-    <strong>$9 one-time unlock</strong> is how you pay for it.
-    See <a href="LANDING.html" data-zf-event="pricing_view">pricing details</a>.
+    <strong id="unlockNoticeTitle">Starting checkout.</strong>
+    <p id="unlockNoticeBody">Your browser is being handed to the hosted checkout. The unlock
+    appears here only after the payment is confirmed by the payment provider itself.</p>
   </div>
 
   <div class="pricing">
-    <div class="price">$9 one-time</div>
-    <p>Full clean export, once - no subscription. Free forever for previewing issues.
-     Checkout activates when payments are connected (no card required until then).</p>
+    <div class="price">$9 one-time / &#8377;749 one-time</div>
+    <p>Full clean export, once - no subscription. Free forever for issue preview and the cleaned
+     preview table. Nothing to configure until you decide to pay.</p>
+    <p>Paying opens Razorpay's hosted checkout in this tab (card, UPI or netbanking) and the unlock
+     is granted only after Razorpay confirms the payment to our engine - this page cannot grant it
+     by itself. The CSV analysis always stays in your browser.</p>
     <p>Fix files in bulk or want it done for you?
-    <a href="../csv-fix-service/index.html" data-zf-event="cta_click">CSV Fix Service</a> repairs files for you from $8.99.</p>
+    <a href="../csv-fix-service/index.html" data-zf-event="cta_click">CSV Fix Service</a> repairs files for you from $8.99.
+    Full <a href="LANDING.html" data-zf-event="pricing_view">pricing details</a>.</p>
     <p class="hint" style="color:var(--muted);font-size:.8rem;margin-top:8px">
       This page keeps an anonymous session log in your own browser only
       (open the <strong>session log</strong> badge at the bottom right) - no cookies,
@@ -131,10 +135,130 @@ const RULES = TidyCSV.RULES;
 const RULE_LABELS = TidyCSV.RULE_LABELS;
 
 const $ = id => document.getElementById(id);
-let cleaned = null, fileName = "cleaned.csv";
+let cleaned = null, fileName = "cleaned.csv", lastIssues = null, entitled = false;
+
+/* ---------------------------------------------------------------- checkout
+ * The page never reports success. It asks the engine for an order, hands the
+ * browser to the hosted checkout, and only unlocks after the engine confirms
+ * the payment against the provider (webhook or signed return). Set
+ * window.ZF_PAY_API to the published engine origin when this page is served
+ * somewhere other than the engine itself (e.g. GitHub Pages).
+ */
+const PAY = { api: String(window.ZF_PAY_API || "").replace(/\/+$/, ""), slug: "tidycsv" };
+const ENTITLEMENT_KEY = "zf_entitlement";
+
+function apiUrl(path){ return PAY.api + path; }
+
+async function payFetch(path, body){
+  const response = await fetch(apiUrl(path), {
+    method: body ? "POST" : "GET",
+    headers: body ? {"Content-Type": "application/json"} : undefined,
+    body: body ? JSON.stringify(body) : undefined
+  });
+  let data = {};
+  try { data = await response.json(); } catch (err) { data = {}; }
+  data.__status = response.status;
+  return data;
+}
+
+function experimentId(){
+  const cfg = window.ZF_TRACKING || {};
+  return String(cfg.experiment || "");
+}
+
+function saveEntitlement(key){
+  try { localStorage.setItem(ENTITLEMENT_KEY, key); } catch (err) { /* private mode */ }
+}
+
+function readEntitlement(){
+  try { return localStorage.getItem(ENTITLEMENT_KEY) || ""; } catch (err) { return ""; }
+}
+
+function clearEntitlement(){
+  try { localStorage.removeItem(ENTITLEMENT_KEY); } catch (err) { /* ignore */ }
+}
+
+function unlock(key){
+  entitled = true;
+  if (key) saveEntitlement(key);
+  $("downloadBtn").disabled = false;
+  $("unlockBtn").textContent = "Unlocked - thank you";
+  $("unlockBtn").disabled = true;
+  $("unlockNotice").classList.add("hidden");
+  $("entitlementBadge").classList.remove("hidden");
+  if (lastIssues) renderIssues(lastIssues);
+}
+
+function showCheckoutNotice(title, body){
+  $("unlockNoticeTitle").textContent = title;
+  $("unlockNoticeBody").innerHTML = body;
+  $("unlockNotice").classList.remove("hidden");
+  $("unlockNotice").scrollIntoView({behavior: "smooth", block: "center"});
+}
+
+function loadRazorpayScript(){
+  return new Promise((resolve, reject) => {
+    if (window.Razorpay) { resolve(); return; }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("checkout script failed to load"));
+    document.head.appendChild(script);
+  });
+}
+
+function openRazorpay(session){
+  return new Promise((resolve, reject) => {
+    loadRazorpayScript().then(() => {
+      const rzp = new window.Razorpay({
+        key: session.key_id,
+        order_id: session.order_ref,
+        name: "TidyCSV",
+        description: "Full clean export - one-time unlock",
+        theme: {color: "#0a7d34"},
+        handler: async (response) => {
+          try {
+            const result = await payFetch("/api/checkout/verify", {
+              order_id: response.razorpay_order_id || session.order_ref,
+              payment_id: response.razorpay_payment_id,
+              signature: response.razorpay_signature
+            });
+            resolve(result);
+          } catch (err) { reject(err); }
+        },
+        modal: { ondismiss: () => reject(new Error("checkout dismissed")) }
+      });
+      rzp.on("payment.failed", () => reject(new Error("payment failed")));
+      rzp.open();
+    }).catch(reject);
+  });
+}
+
+async function refreshEntitlement(){
+  const stored = readEntitlement();
+  if (!stored) return;
+  try {
+    const info = await payFetch("/api/entitlement?key=" + encodeURIComponent(stored));
+    if (info && info.active) { unlock(stored); return; }
+    clearEntitlement();
+  } catch (err) { /* endpoint unreachable: stay locked, never self-grant */ }
+}
 
 function esc(text){
   return String(text).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+}
+
+function renderIssues(issues){
+  const limit = entitled ? issues.length : 50;
+  $("issueList").innerHTML = issues.slice(0, limit).map(issue => {
+    const where = (issue.row ? "row " + issue.row + " " : "") + issue.column;
+    return "<li><span class='badge'>" + RULE_LABELS[issue.rule] + "</span>" +
+      esc(where) + ": " + esc(issue.detail) + "</li>";
+  }).join("");
+  if (issues.length > limit){
+    $("issueList").innerHTML += "<li>... " + (issues.length - limit) +
+      " more - unlock for the full change report</li>";
+  }
 }
 
 function show(headers, rows, issues, cleanResult){
@@ -154,12 +278,8 @@ function show(headers, rows, issues, cleanResult){
     tbody.appendChild(tr);
   }
   $("noIssues").classList.toggle("hidden", issues.length > 0);
-  $("issueList").innerHTML = issues.slice(0, 200).map(issue => {
-    const where = (issue.row ? "row " + issue.row + " " : "") + issue.column;
-    return "<li><span class='badge'>" + RULE_LABELS[issue.rule] + "</span>" +
-      esc(where) + ": " + esc(issue.detail) + "</li>";
-  }).join("");
-  if(issues.length > 200) $("issueList").innerHTML += "<li>... " + (issues.length - 200) + " more</li>";
+  lastIssues = issues;
+  renderIssues(issues);
 
   const preview = $("preview");
   let html = "<table><thead><tr>";
@@ -199,7 +319,7 @@ function loadText(text, name){
   cleaned = TidyCSV.clean(parsed.headers, parsed.rows);
   show(parsed.headers, parsed.rows, issues, cleaned);
   $("unlockNotice").classList.add("hidden");
-  $("downloadBtn").disabled = true;
+  $("downloadBtn").disabled = !entitled;
   if(typeof window.zfTrack === "function") window.zfTrack("engaged");
 }
 
@@ -226,13 +346,57 @@ $("drop").addEventListener("drop", e => {
   reader.readAsText(file);
 });
 
-$("unlockBtn").addEventListener("click", () => {
-  $("unlockNotice").classList.remove("hidden");
-  $("downloadBtn").disabled = false;
-  $("unlockBtn").disabled = true;
+$("unlockBtn").addEventListener("click", async () => {
   if(typeof window.zfTrack === "function") window.zfTrack("checkout_start");
   if(typeof window.zfTrack === "function") window.zfTrack("paid_cta_click");
-  $("unlockNotice").scrollIntoView({behavior: "smooth", block: "center"});
+  if(entitled) return;
+  $("unlockBtn").disabled = true;
+  showCheckoutNotice(
+    "Starting checkout.",
+    "Asking the engine for an order and opening the hosted checkout. The unlock " +
+    "appears here only after the payment provider confirms the payment."
+  );
+  try {
+    const session = await payFetch("/api/checkout", {slug: PAY.slug, experiment_id: experimentId()});
+    if(session.status === "created" && session.order_ref){
+      const result = await openRazorpay(session);
+      if(result && (result.status === "paid" || result.status === "already_paid") && result.entitlement_key){
+        unlock(result.entitlement_key);
+        if(typeof window.zfTrack === "function") window.zfTrack("conversion");
+        return;
+      }
+      showCheckoutNotice(
+        "Payment not confirmed yet.",
+        "The provider has not confirmed this payment, so nothing has been unlocked. " +
+        "If you were charged, the confirmation arrives automatically - reload this page in a minute."
+      );
+    } else if(session.status === "blocked"){
+      showCheckoutNotice(
+        "Checkout is awaiting activation.",
+        "Payments switch on once the payment-provider onboarding is approved by the site " +
+        "owner. The analysis above stays free either way."
+      );
+    } else if(session.status === "unconfigured"){
+      showCheckoutNotice(
+        "Checkout is connecting.",
+        "Payment credentials are not configured on the engine yet. The download opens " +
+        "automatically as soon as they are."
+      );
+    } else {
+      showCheckoutNotice(
+        "Checkout unavailable.",
+        esc(session.reason || session.status || "the engine did not return a session")
+      );
+    }
+  } catch (err) {
+    showCheckoutNotice(
+      "Checkout is not reachable from this page.",
+      "The payment endpoint is not published for this host yet, so nothing can be charged " +
+      "and nothing is unlocked. Your file still never leaves this tab."
+    );
+  } finally {
+    if(!entitled) $("unlockBtn").disabled = false;
+  }
 });
 
 $("downloadBtn").addEventListener("click", () => {
@@ -249,16 +413,19 @@ $("downloadBtn").addEventListener("click", () => {
 
 $("resetBtn").addEventListener("click", () => {
   cleaned = null;
+  lastIssues = null;
   $("results").classList.add("hidden");
   $("actions").classList.add("hidden");
   $("unlockNotice").classList.add("hidden");
   $("resultSummary").classList.add("hidden");
-  $("unlockBtn").disabled = false;
+  $("unlockBtn").disabled = entitled;
   $("downloadBtn").disabled = true;
   $("file").value = "";
 });
+
+refreshEntitlement();
 </script>
-<script>window.ZF_TRACKING = {experiment: "exp_006", product: "tidycsv"};</script>
+<script>window.ZF_TRACKING = {experiment: "exp_008", product: "tidycsv"};</script>
 <script src="zf-track.js"></script>
 </body>
 </html>
