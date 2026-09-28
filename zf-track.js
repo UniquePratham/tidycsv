@@ -8,9 +8,13 @@
  * into the engine with: python -m zeroforge track-session --experiment <id> --file <json>
  *
  * Allowlisted events (must match zeroforge.experiments.TRACKABLE):
- *   visitor, engaged, repeat, cta_click, pricing_view, checkout_start, lead, conversion
+ *   visitor, engaged, repeat, landing_view, tool_started, tool_completed,
+ *   cta_click, paid_cta_click, pricing_view, checkout_start, lead, conversion
  *   service_page_view, service_request_started, service_request_submitted,
  *   service_request_qualified
+ * Every event also stores the referrer host and a test flag (?zf_test=1).
+ * Exports opened with ?zf_test=1 are owner/QA sessions: track-session counts
+ * them into skipped_test and never into the funnel.
  * Ledger-only events (purchase / revenue) are deliberately NOT recordable here:
  * verified revenue can only come from confirmed transactions.
  */
@@ -22,11 +26,26 @@
   var PRODUCT = String(cfg.product || "");
   var STORE_KEY = "zf_events_v1";
   var SEEN_KEY = "zf_seen_v1";
+  /* Owner/QA sessions open the page with ?zf_test=1; the flag is stored on
+   * every event so an export made later still separates test from external. */
+  var TEST = /(?:^|[?&])zf_test=1(?:&|$)/.test(String(window.location.search || ""));
+  var REF_HOST = (function () {
+    try {
+      var ref = document.referrer || "";
+      return ref ? new URL(ref).hostname : "";
+    } catch (err) {
+      return "";
+    }
+  })();
   var ALLOWED = {
     visitor: 1,
     engaged: 1,
     repeat: 1,
+    landing_view: 1,
+    tool_started: 1,
+    tool_completed: 1,
     cta_click: 1,
+    paid_cta_click: 1,
     pricing_view: 1,
     checkout_start: 1,
     lead: 1,
@@ -75,7 +94,9 @@
       event: event,
       count: n,
       at: new Date().toISOString(),
-      page: String(window.location.pathname || "")
+      page: String(window.location.pathname || ""),
+      ref: REF_HOST,
+      test: TEST
     });
     write(list);
     render();
@@ -91,6 +112,8 @@
       experiment: EXP,
       product: PRODUCT,
       exported_at: new Date().toISOString(),
+      referrer: document.referrer || "",
+      test: TEST,
       source: "client-side session log (no third-party analytics)",
       events: read()
     };
@@ -216,6 +239,7 @@
     document.body.appendChild(panel);
     document.addEventListener("click", onClick, false);
     record(seenBefore() ? "repeat" : "visitor", 1);
+    record("landing_view", 1);
     render();
     if (window.ZF_TRACKING && window.ZF_TRACKING.onReady) {
       try {

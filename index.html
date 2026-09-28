@@ -184,9 +184,11 @@ function show(headers, rows, issues, cleanResult){
       (cleanResult.rows.length === 1 ? "" : "s") + " kept as-is.";
   $("resultSummary").classList.remove("hidden");
   if(typeof window.zfTrack === "function") window.zfTrack("pricing_view");
+  if(typeof window.zfTrack === "function") window.zfTrack("tool_completed");
 }
 
 function loadText(text, name){
+  if(typeof window.zfTrack === "function") window.zfTrack("tool_started");
   const parsed = TidyCSV.parse(text);
   if(!parsed.headers.length){
     alert("No header row found - is this a CSV file?");
@@ -229,6 +231,7 @@ $("unlockBtn").addEventListener("click", () => {
   $("downloadBtn").disabled = false;
   $("unlockBtn").disabled = true;
   if(typeof window.zfTrack === "function") window.zfTrack("checkout_start");
+  if(typeof window.zfTrack === "function") window.zfTrack("paid_cta_click");
   $("unlockNotice").scrollIntoView({behavior: "smooth", block: "center"});
 });
 

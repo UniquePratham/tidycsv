@@ -4,6 +4,10 @@ Clean messy CSV files **in your browser**. Duplicates, whitespace, empty rows,
 broken headers, suspicious emails and mixed date formats - fixed locally.
 Your file never leaves your device.
 
+**Live:** <https://uniquepratham.github.io/tidycsv/> ·
+**Done-for-you variant:** <https://uniquepratham.github.io/csv-fix-service/> ·
+**Repository:** <https://github.com/UniquePratham/tidycsv>
+
 ## Why it exists
 
 CSV exports from Shopify, Airtable, HubSpot, Salesforce and Google Sheets often

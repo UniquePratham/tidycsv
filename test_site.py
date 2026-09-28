@@ -32,6 +32,10 @@ EVENTS = [
     "conversion",
     "visitor",
     "repeat",
+    "landing_view",
+    "tool_started",
+    "tool_completed",
+    "paid_cta_click",
 ]
 
 
@@ -195,6 +199,34 @@ class TrackingEventTests(unittest.TestCase):
         for event in ("engaged", "cta_click", "pricing_view"):
             self.assertIn(f'data-zf-event="{event}"', tool,
                           f"widget missing hook {event}")
+
+    def test_phase8_usage_and_paid_intent_hooks(self):
+        idx = page("index.html")
+        for hook in ('window.zfTrack("tool_started")',
+                     'window.zfTrack("tool_completed")',
+                     'window.zfTrack("paid_cta_click")',
+                     'window.zfTrack("checkout_start")'):
+            self.assertIn(hook, idx, f"missing hook: {hook}")
+        tool = page("seo-tool.js")
+        for hook in ('zfTrack("tool_started")', 'zfTrack("tool_completed")'):
+            self.assertIn(hook, tool, f"widget missing hook: {hook}")
+
+    def test_tracker_records_landing_view_and_test_flag(self):
+        src = page("zf-track.js")
+        self.assertIn('record("landing_view", 1)', src, "landing view must be recorded on load")
+        self.assertIn("zf_test=1", src, "owner/test sessions must be flagged")
+        self.assertIn("test: TEST", src, "each event must carry the test flag")
+        self.assertIn("ref: REF_HOST", src, "each event must carry the referrer host")
+        self.assertIn("referrer: document.referrer", src,
+                      "export must carry the referrer for owner import")
+
+    def test_indexnow_key_file_is_published_for_ownership(self):
+        keys = [p for p in ROOT.glob("*.txt") if p.name != "robots.txt"]
+        self.assertEqual(len(keys), 1, f"expected exactly one IndexNow key file: {keys}")
+        content = keys[0].read_text(encoding="ascii").strip()
+        self.assertRegex(content, r"^[0-9a-f]{32}$")
+        self.assertEqual(keys[0].stem, content, "file name must be <key>.txt")
+        self.assertLess(keys[0].stat().st_size, 3072, "IndexNow key file must be < 3KB")
 
 
 class NodeParityTests(unittest.TestCase):

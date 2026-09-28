@@ -96,6 +96,7 @@
     var wanted = focusIssues(issues);
     last = cleaned;
     document.getElementById("zcOut").classList.remove("zc-hidden");
+    if (typeof window.zfTrack === "function") window.zfTrack("tool_started");
 
     var byRule = {};
     issues.forEach(function (i) { byRule[i.rule] = (byRule[i.rule] || 0) + 1; });
@@ -127,6 +128,7 @@
       cleaned.notes.map(function (n) { return "<li>" + esc(n) + "</li>"; }).join("") +
       (wanted.length ? "" : "<li>This page's focus checks passed.</li>");
     if (typeof window.zfTrack === "function") window.zfTrack("engaged");
+    if (typeof window.zfTrack === "function") window.zfTrack("tool_completed");
     document.getElementById("zcOut").scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
